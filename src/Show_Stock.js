@@ -1,7 +1,6 @@
 import React, { Component } from 'react'
-import Highcharts from "highcharts/highstock";
-import HighchartsReact from "highcharts-react-official";
-
+import Highcharts from 'highcharts'
+import HighchartsReact from 'highcharts-react-official'
 async function get_stock_data(stockname) {
   return fetch('https://histock.tw/stock/chip/chartdata.aspx?no=' + stockname + '&days=80&m=dailyk,volume')
     .then(function (data) {
@@ -133,7 +132,7 @@ async function show_graph(stockname) {
   return options;
 }
 
-function Test() {
+function Stock() {
 
 
   let [searchText, setSearch] = React.useState("");
@@ -175,12 +174,6 @@ function Test() {
 
       <div>{result}</div>
       <StockGraph stockname={result} />
-
-
-
-
-
-
     </div>)
 }
 
@@ -204,22 +197,7 @@ function StockGraph(props) {
   );
 }
 
-
-function StockAdd(props) {
-  let stockname = props.stockname;
-  return (
-    <label>
-      Pick your favorite flavor:
-      <select value={this.state.value} onChange={this.handleChange}>
-        <option value="grapefruit">Grapefruit</option>
-        <option value="lime">Lime</option>
-        <option value="coconut">Coconut</option>
-        <option value="mango">Mango</option>
-      </select>
-    </label>
-  )
-}
-export default Test
+export default Stock
 
 
 

@@ -8,7 +8,5 @@ steps:
 # Deploy container image to Cloud Run
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
   entrypoint: gcloud
-  args: ['run', 'deploy', 'test', '--image', 'gcr.io/stock-react/example', '--region', 'us-central1', '--platform', 'managed']
+  args: ['run', 'deploy', 'test', '--image', 'gcr.io/stock-react/example', '--region', 'us-central1', '--platform', 'managed','--port','80','--allow-unauthenticated']
 
-images:
-- gcr.io/stock-react/example

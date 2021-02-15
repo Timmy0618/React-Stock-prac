@@ -1,19 +1,17 @@
-# pull official base image
-FROM node:12-alpine
+FROM node:12 AS Builder
 
-# set working directory
-WORKDIR /app
+ENV NPM_CONFIG_LOGLEVEL info
 
-# add `/app/node_modules/.bin` to $PATH
-#ENV PATH /app/node_modules/.bin:$PATH
+RUN mkdir -p /usr/src/app
+WORKDIR /usr/src/app
 
-COPY package*.json ./
-# install app dependencies
-RUN npm install 
+COPY . .
 
-# add app
-COPY . ./
+ARG GENERATE_SOURCEMAP=false
 
-EXPOSE 3000
-# start app
-CMD ["npm", "start"]
+RUN yarn install && yarn build
+
+FROM nginx:1.13.3-alpine
+
+RUN rm -rf /usr/share/nginx/html/*
+COPY --from=Builder /usr/src/app/build /usr/share/nginx/html

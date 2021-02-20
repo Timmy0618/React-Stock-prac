@@ -1,15 +1,26 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';
+//import './index.css';
 import App from './App';
 import Stock from './Show_Stock'
 import Login from './UserLogin'
 import reportWebVitals from './reportWebVitals';
+import Container from 'react-bootstrap/Container';
+import Row from 'react-bootstrap/Row'
+import Col from 'react-bootstrap/Col'
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 ReactDOM.render(
+
   <React.StrictMode>
-    <Stock />
-    <Login />
+    <Container className="p-3">
+      <Row>
+        <Col>
+          <Stock />
+          <Login />
+        </Col>
+      </Row>
+    </Container>
   </React.StrictMode>,
   document.getElementById('googleButton')
 );

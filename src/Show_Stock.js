@@ -9,20 +9,20 @@ import FormControl from 'react-bootstrap/FormControl'
 import Form from 'react-bootstrap/Form'
 import Table from 'react-bootstrap/Table'
 import axios from 'axios';
-
-/*
-async function get_stock_data(stockname) {
-  return fetch('https://histock.tw/stock/chip/chartdata.aspx?no=' + stockname + '&days=80&m=dailyk,volume')
-    .then(function (data) {
-      return data.json();
-    })
-}
-*/
-
+import Spinner from 'react-bootstrap/Spinner'
+import Alert from 'react-bootstrap/Alert'
+import Dropdown from 'react-bootstrap/Dropdown'
+import DropdownButton from 'react-bootstrap/DropdownButton'
+import Row from 'react-bootstrap/Row'
+import Col from 'react-bootstrap/Col'
 async function get_stock_data(stockname) {
   return axios.get(`/get/stock/data?stockname=${stockname}`)
     .then(function (response) {
       console.log(response.data);
+      if (Object.keys(response.data).length === 0) {
+        console.log("物件為空");
+        return [];
+      }
       return response.data;
     })
 }
@@ -156,92 +156,37 @@ function show_graph(stockname, data) {
   return options;
 }
 
-function Stock() {
+function Stockhistorydata(props) {
 
-  let [searchText, setSearch] = React.useState("");
-  let [result, setResult] = React.useState("");
-  let [selectResult, setSelect] = React.useState("0");
-  let [stocklist, setList] = React.useState([]);
-  let [stockdata, setdata] = React.useState([]);
+  let { stockdata: data, setclose } = props;
+  let [range, setrange] = React.useState({ Date: 0, Open: 0, High: 0, Low: 0, Close: 0, Volume: 0 });
+  //let data = props.data;
+  //let volumerange = props.volumerange;
+  console.log(range);
 
-  const handleChanged = (event) => {
-    setSearch(event.target.value);
-  };
-
-  const handleSearch = () => {
-    setResult(searchText);
-    get_stock_data(searchText).then(
-      data =>
-        setdata(data)
-    );
-  };
-
-  const clickChange = (data) => {
-    setResult(data);
-  };
-
-  const AddStock = () => {
-    if (stocklist.indexOf(searchText) === -1) {
-      setList([...stocklist, searchText]);
-    }
-  };
-
-  console.log(stocklist, stockdata);
-  return (
-    <div>
-      <Navbar bg="light" expand="lg">
-        <Navbar.Brand >STOCK</Navbar.Brand>
-        <Navbar.Toggle aria-controls="basic-navbar-nav" />
-        <Navbar.Collapse id="basic-navbar-nav">
-          <Nav className="mr-auto">
-            <NavDropdown title="最愛" >
-              {
-                stocklist.map((data, index) => <NavDropdown.Item herf="#" value={data} onClick={() => clickChange(data)} key={index}>{data}</NavDropdown.Item>)
-              }
-            </NavDropdown>
-          </Nav>
-          <Form inline>
-            <FormControl type="text" placeholder="Stockname" className="mr-sm-2" val={searchText} onChange={handleChanged} />
-            <Button variant="outline-success" onClick={handleSearch}>Search</Button>
-            <Button variant="primary" onClick={AddStock}>加入最愛</Button>
-          </Form>
-        </Navbar.Collapse>
-      </Navbar>
-      <StockGraph stockname={result} data={stockdata} />
-      <Stock_history_data data={stockdata} />
-    </div>
-  )
-}
-
-
-function Stock_history_data(props) {
-  let data = props.data;
   var newDate = new Date();
-
-  console.log(data);
+  console.log(data.length);
   if (data.length === 0)
     return <></>;
   let ary = [];
-  let classvolume = ""
-  let classclose = ""
   console.log(data.timestamp.length)
   for (let i = data.timestamp.length - 1; i > 0; i--) {
-    classvolume = "";
-    classclose = ""
+    let classvolume = "";
+    let classclose = ""
     newDate.setTime(data.timestamp[i] * 1000);
-    if (data.volume[i] > data.volume[i - 1] * 1.4)
+    if (data.volume[i] > data.volume[i - 1] * (1 + (range.Volume / 100)))
       classvolume = "table-danger";
-    if (data.close[i] > data.close[i - 1] * 1.05)
+    if (data.close[i] > data.close[i - 1] * (1 + (range.Close / 100)))
       classclose = "table-danger";
-    if (data.close[i] < data.close[i - 1] * 0.95)
+    if (data.close[i] < data.close[i - 1] * (1 - (range.Close / 100)))
       classclose = "table-success";
-    ary.push(<tr>
-      <td>{newDate.toLocaleDateString()}</td>
-      <td>{data.open[i].toFixed(2)}</td>
-      <td>{data.high[i].toFixed(2)}</td>
-      <td>{data.low[i].toFixed(2)}</td>
-      <td class={classclose}>{data.close[i].toFixed(2)}</td>
-      <td class={classvolume} >{data.volume[i]}</td>
+    ary.push(<tr key={i}>
+      <td >{newDate.toLocaleDateString()}</td>
+      <td >{data.open[i].toFixed(2)}</td>
+      <td >{data.high[i].toFixed(2)}</td>
+      <td >{data.low[i].toFixed(2)}</td>
+      <td className={classclose}>{data.close[i].toFixed(2)}</td>
+      <td className={classvolume} >{data.volume[i]}</td>
     </tr>)
   }
   return (
@@ -257,6 +202,7 @@ function Stock_history_data(props) {
         </tr>
       </thead>
       <tbody>
+        <Setrange {...{ range, setrange }} />
         {ary}
       </tbody>
     </Table>
@@ -280,9 +226,10 @@ function StockGraph(props) {
 
 
 
-  if (!stock_name) return <h1>no stockname</h1>;
+  if (!stock_name || stock_data.length === 0)
+    return <Alert variant="danger">No Stock</Alert>;
   console.log(option);
-  if (option.length === 0) return <h1>Loading</h1>;
+  if (option.length === 0) return <Spinner animation="border" />;
   return (
     <HighchartsReact
       highcharts={Highcharts}
@@ -290,6 +237,184 @@ function StockGraph(props) {
       options={option}
     />
   );
+}
+
+function ShowApi(props) {
+  let { setSearch, setResult, setList, setdata, searchText, stocklist } = props;
+
+  const handleChanged = (event) => {
+    setSearch(event.target.value);
+  };
+
+  const handleSearch = () => {
+    setResult(searchText);
+    console.log(searchText);
+    get_stock_data(searchText).then(
+      data =>
+        setdata(data)
+    );
+  };
+
+  const clickChange = (data) => {
+    setResult(data);
+  };
+
+  const AddStock = () => {
+    if (stocklist.indexOf(searchText) === -1) {
+      setList([...stocklist, searchText]);
+    }
+  };
+  return (
+    <Navbar bg="light" expand="lg">
+      <Navbar.Brand >STOCK</Navbar.Brand>
+      <Navbar.Toggle aria-controls="basic-navbar-nav" />
+      <Navbar.Collapse id="basic-navbar-nav">
+        <Nav className="mr-auto">
+          <NavDropdown title="最愛" >
+            {
+              stocklist.map((data, index) => <NavDropdown.Item herf="#" value={data} onClick={() => clickChange(data)} key={index}>{data}</NavDropdown.Item>)
+            }
+          </NavDropdown>
+        </Nav>
+        <Form inline>
+          <FormControl type="text" placeholder="Stockname" className="mr-sm-2" val={searchText} onChange={handleChanged} />
+          <Button variant="outline-success" onClick={handleSearch}>Search</Button>
+          <Button variant="primary" onClick={AddStock}>加入最愛</Button>
+        </Form>
+      </Navbar.Collapse>
+    </Navbar>
+  )
+}
+
+function Setrange(props) {
+  let { range, setrange } = props;
+  let [title, settitle] = React.useState({ Date: 'Date', Open: 'Open', High: 'High', Low: 'Low', Close: 'Close', Volume: 'Volume' });
+  const DateChange = (data) => {
+    settitle(title => {
+      return { ...title, Date: data + '%' }
+    })
+    setrange(range => {
+      return { ...range, Date: data }
+    })
+  };
+  const OpenChange = (data) => {
+    settitle(title => {
+      return { ...title, Open: data + '%' }
+    })
+    setrange(range => {
+      return { ...range, Open: data }
+    })
+  };
+  const HighChange = (data) => {
+    settitle(title => {
+      return { ...title, High: data + '%' }
+    })
+    setrange(range => {
+      return { ...range, High: data }
+    })
+  };
+  const Lowchange = (data) => {
+    settitle(title => {
+      return { ...title, Low: data + '%' }
+    })
+    setrange(range => {
+      return { ...range, Low: data }
+    })
+  };
+  const CloseChange = (data) => {
+    settitle(title => {
+      return { ...title, Close: data + '%' }
+    })
+    setrange(range => {
+      return { ...range, Close: data }
+    })
+  };
+  const VolumeChange = (data) => {
+    console.log(data);
+    settitle(title => {
+      return { ...title, Volume: data + '%' }
+    })
+    console.log(range.Volume);
+    setrange(range => {
+      return { ...range, Volume: data }
+    })
+  };
+  let buttons = [
+    { title: title.Date, action: DateChange },
+    { title: title.Open, action: OpenChange },
+    { title: title.High, action: HighChange },
+    { title: title.Low, action: Lowchange },
+    { title: title.Close, action: CloseChange },
+  ];
+  function buttonchange(data) {
+    let ary = [];
+    for (let i = 1; i < 10; i += 1) {
+      ary.push(
+        <Dropdown.Item href="#" onClick={() => data(i)} key={i}>{i + '%'}</Dropdown.Item>
+      )
+    }
+    return ary;
+  }
+  function buttonVolumechange() {
+    let ary = [];
+    for (let i = 10; i < 100; i += 10) {
+      ary.push(
+        <Dropdown.Item href="#" onClick={() => VolumeChange(i)} key={i}>{i + '%'}</Dropdown.Item>
+      )
+    }
+    return ary;
+  }
+  return (
+    <tr>
+      { buttons.map((data) => (
+        <td>
+          <DropdownButton title={data.title}>
+            {buttonchange(data.action)}
+          </DropdownButton>
+        </td>
+      ))}
+      {
+        <td>
+          <DropdownButton title={title.Volume}>
+            {buttonVolumechange()}
+          </DropdownButton>
+        </td>
+      }
+    </tr>
+  )
+
+}
+function Stock() {
+
+  let [searchText, setSearch] = React.useState("");
+  let [result, setResult] = React.useState("");
+  let [selectResult, setSelect] = React.useState("0");
+  let [stocklist, setList] = React.useState([]);
+  let [stockdata, setdata] = React.useState([]);
+
+  let [closerange, setclose] = React.useState(0);
+
+  console.log(stocklist, stockdata);
+  return (
+    <div>
+      <Row>
+        <Col>
+          <ShowApi {...{ setSearch, setResult, setList, setdata, searchText, stocklist }} />
+        </Col>
+      </Row>
+      <Row>
+        <Col>
+          <StockGraph stockname={result} data={stockdata} />
+        </Col>
+      </Row>
+      <Row>
+        <Col>
+          <Stockhistorydata {...{ stockdata, setclose }} />
+        </Col>
+      </Row>
+
+    </div>
+  )
 }
 
 export default Stock

@@ -11,15 +11,15 @@ import Col from 'react-bootstrap/Col'
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const axios = require('axios').default;
-//axios.defaults.baseURL = 'http://localhost:8080';
+axios.defaults.baseURL = 'http://localhost:8080';
 
 ReactDOM.render(
 
   <React.StrictMode>
     <Container className="p-3">
+      <Stock />
       <Row>
         <Col>
-          <Stock />
           <Login />
         </Col>
       </Row>

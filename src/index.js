@@ -10,6 +10,9 @@ import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import 'bootstrap/dist/css/bootstrap.min.css';
 
+const axios = require('axios').default;
+//axios.defaults.baseURL = 'http://localhost:8080';
+
 ReactDOM.render(
 
   <React.StrictMode>
